@@ -97,9 +97,6 @@ tail-aware-volatility-model/
 │
 ├── train.py              # training loop (mostly your current code)
 ├── model.py              # model class only
-├── dataset.py            # Dataset + DataLoader
-├── loss.py               # your tail-aware loss
-├── config.py             # hyperparameters
-├── checkpoint.pt
+├── dataset.py            # Dataset + DataLoader             
 ├── requirements.txt
 └── README.md
