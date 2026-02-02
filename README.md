@@ -93,3 +93,13 @@ This biases the model toward **safer tail behavior**, which is often more import
 
 ## Repository Structure
 
+tail-aware-volatility-model/
+│
+├── train.py              # training loop (mostly your current code)
+├── model.py              # model class only
+├── dataset.py            # Dataset + DataLoader
+├── loss.py               # your tail-aware loss
+├── config.py             # hyperparameters
+├── checkpoint.pt
+├── requirements.txt
+└── README.md
