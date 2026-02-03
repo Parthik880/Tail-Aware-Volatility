@@ -12,7 +12,7 @@ import pandas as pd
 import yfinance as yf
 import math
 from datasets import build_features,time_series,psi_split
-df1 = yf.download("MSFT", start="2020-01-01")
+df1 = yf.download("", start="")#ticker and #date
 df=build_features(df1)
 train,test=psi_split(df)
 
