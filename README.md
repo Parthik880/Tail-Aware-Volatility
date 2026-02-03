@@ -136,7 +136,7 @@ k in the range [1,3]
 
 tail-aware-volatility-model/
 │
-├── train.py              # training loop (mostly your current code)
+├── train.py              # training loop
 ├── model.py              # model class only
 ├── dataset.py            # Dataset + DataLoader             
 ├── requirements.txt
