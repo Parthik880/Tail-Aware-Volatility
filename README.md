@@ -80,16 +80,58 @@ Models operate on `(batch, time, features)` sequences.
 
 ---
 
-### 5. Tail-Aware Training Objective
+### 5. Tail Penalty Coefficient (k)
 
-The training loss combines:
-- MSE on log-volatility
-- asymmetric tail penalty (underestimation-aware)
-- optional relative error in real-volatility space
+The parameter k controls how strongly the model penalizes underprediction during high-volatility (tail) periods.
 
-This biases the model toward **safer tail behavior**, which is often more important than mean accuracy in risk-sensitive settings.
+Standard MSE loss tends to smooth predictions and underestimate rare volatility spikes. To address this, an additional asymmetric penalty is applied whenever the predicted log-volatility is lower than the true log-volatility.
 
----
+How it works
+
+During training:
+
+The model predicts log-volatility
+
+Mean Squared Error (MSE) is used as the base loss
+
+An extra penalty is added only when volatility is underpredicted
+
+A relative error term stabilizes scaling across regimes
+
+The final loss is a weighted sum of:
+
+MSE loss on log-volatility
+
+Tail penalty (activated only when prediction < target)
+
+Relative error in real volatility space
+
+The coefficient k determines how much weight is given to the tail penalty.
+
+Effect of different k values
+
+Small k (0 – 0.5)
+Smooth predictions, strong regime tracking, but tail spikes are often underestimated.
+
+Moderate k (1 – 3) (recommended)
+Better responsiveness to volatility spikes while maintaining stable training.
+
+Large k (> 5)
+Aggressive tail sensitivity, which may lead to overprediction and unstable training dynamics.
+
+Practical considerations
+
+Volatility tails are asset-specific; a single global k may behave differently across stocks.
+
+Increasing k improves crisis-period accuracy but can degrade performance during low-volatility regimes.
+
+In this repository, k is treated as a research hyperparameter, not a fixed constant.
+
+Recommended setting
+
+For most equity datasets:
+k in the range [1,3]
+
 
 ## Repository Structure
 
