@@ -44,9 +44,8 @@ A linear model is fitted **only on the training split** to obtain a coefficient 
 
 ψ is used as a **feature-wise diagonal modulation**:
 
-\[
-\tilde{X}_{t,i} = X_{t,i} \cdot \psi_i + b
-\]
+X_tilde[t, i] = X[t, i] * psi[i] + b
+
 
 The modulated features are concatenated with the original features to preserve memory and structure.
 
