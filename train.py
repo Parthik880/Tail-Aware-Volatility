@@ -142,7 +142,7 @@ def main(k):
         torch.save(model.state_dict(), "model.pth")
         print("Model saved")
 
-
+k=2.5
 if __name__ == "__main__":
-        main(k=2.5)
-print(f"Volatility Prediction Model Trained with k={2.5}")
+        main(k)
+print(f"Volatility Prediction Model Trained with k={k}")
