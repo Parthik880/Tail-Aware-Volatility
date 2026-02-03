@@ -308,8 +308,8 @@ class selfattnpooling(nn.Module):
 class Volatility_Prediction_Model(nn.Module):
     def __init__(self,n_embd,n_head,block_size,n_blocks):
         super().__init__()
-        #self.long_cnn=LongCNN(49)
-        #self.short_cnn=ShortCNN(49)
+       
+       
         self.res=Res34(49)
         self.dense=DenseNet1D(49)
         self.fusion = nn.Linear(2*512, n_embd)
