@@ -12,8 +12,9 @@ import pandas as pd
 import yfinance as yf
 import math
 from datasets import build_features,time_series,psi_split
-df1 = yf.download("", start="")#ticker and #date
-df=build_features(df1)
+
+#ticker and #date
+df=build_features()
 train,test=psi_split(df)
 
 split=int(0.8*len(df))
@@ -31,7 +32,7 @@ x_test, y_test=time_series(test,30)
 from model import Volatility_Prediction_Model
 
 device='cuda' if torch.cuda.is_available() else 'cpu'
-model = Volatility_Prediction_Model(n_embd=64, n_head=2, block_size=30, n_blocks=2).to(device)
+model = Volatility_Prediction_Model(n_embd=64, n_head=2, block_size=30, n_blocks=3).to(device)
 #model=torch.compile(model)
 
 
@@ -90,6 +91,7 @@ def main(k):
 
 
                 loss = mse + k * tail_penalty.mean()+ 0.1 * rel_loss.mean()
+                loss /= len(train_loader)
                 train_loss += loss.item()
 
                 
@@ -102,7 +104,7 @@ def main(k):
             
                 optimizer.step()
                 #rain_loss += loss.item()
-            train_loss /= len(train_loader)
+            #train_loss /= len(train_loader)
             model.eval()
             test_loss=0
             real_vol_loss=0
@@ -121,7 +123,7 @@ def main(k):
                         mse = loss_fn(pred, yb_log)
                         tail_penalty = ((yb_log - pred).relu())**2
                         loss = mse + k * tail_penalty.mean()
-                
+                        loss /= len(test_loader)
                         test_loss += loss.item()
                 
                         # real-vol loss
@@ -131,7 +133,7 @@ def main(k):
 
 
             
-            test_loss /= len(test_loader)
+            #test_loss /= len(test_loader)
             real_vol_loss /= len(test_loader)
 
             
@@ -142,7 +144,7 @@ def main(k):
         torch.save(model.state_dict(), "model.pth")
         print("Model saved")
 
-k=2.5
+k=1.8 #hyperparameter between 1 to 3
 if __name__ == "__main__":
         main(k)
 print(f"Volatility Prediction Model Trained with k={k}")

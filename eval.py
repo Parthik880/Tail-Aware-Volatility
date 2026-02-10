@@ -5,9 +5,8 @@ import matplotlib.pyplot as plt
 from datasets import build_features,psi_split,time_series
 import yfinance as yf
 
-df1=yf.download("MSFT","2020-01-01")
-df1 = yf.download("MSFT", start="2020-01-01")
-df=build_features(df1)
+
+df=build_features()
 train,test=psi_split(df)
 x_test, y_test=time_series(test,30)
 
@@ -25,7 +24,7 @@ device = "cuda" if torch.cuda.is_available() else "cpu"
 
 
 # Rebuild model EXACTLY
-model = Volatility_Prediction_Model(cnn_dim=49,n_embd=64, n_head=2, block_size=30, n_blocks=2).to(device)
+model = Volatility_Prediction_Model(n_embd=64, n_head=2, block_size=30, n_blocks=3).to(device)
 state_dict = torch.load("model.pth", map_location=device)
 model.load_state_dict(state_dict)
 model.eval()

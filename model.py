@@ -213,8 +213,8 @@ class Res34(torch.nn.Module):
 
 
 
-
-
+#attention model
+#-----------------------------------------
 
 class MultiHeadAttention(nn.Module):
     def __init__(self, n_embd, n_head):
@@ -244,8 +244,35 @@ class MultiHeadAttention(nn.Module):
         out = out.transpose(1, 2).contiguous().view(B, T, C)
 
         return self.proj(out)
+def el(x):
+    return F.elu(x)+1
 
+class Multi_Head_Linear_Attention(nn.Module):
+    def __init__(self, n_embd, n_head):
+        super().__init__()
 
+        assert n_embd % n_head == 0
+        self.n_head = n_head
+        self.head_dim = n_embd // n_head
+
+        self.qkv = nn.Linear(n_embd, 3*n_embd)
+        self.proj = nn.Linear(n_embd, n_embd)
+
+    def forward(self, x):
+        B, T, C = x.shape
+
+        qkv = self.qkv(x)
+        q, k, v = qkv.chunk(3, dim=-1)
+
+        q = q.view(B, T, self.n_head, self.head_dim).transpose(1, 2)
+        k = k.view(B, T, self.n_head, self.head_dim).transpose(1, 2)
+        v = v.view(B, T, self.n_head, self.head_dim).transpose(1, 2)
+        kv=el(k).transpose(-2,-1)@el(v)
+        Z=el(q)@el(k).sum(dim=-2).unsqueeze(-1)
+        out=(el(q)@kv)/Z
+        out=out.transpose(1,2).contiguous().view(B,T,C)
+        out = self.proj(out)   
+        return out
 
 #Multi Layer Perceptron
 class MLP(nn.Module):
@@ -261,7 +288,19 @@ class MLP(nn.Module):
 
 
 #Transformer Block
-class Block(nn.Module):
+class Block(nn.Module):#linear attention block
+    def __init__(self,n_embd,n_head):
+        super().__init__()
+        self.att=Multi_Head_Linear_Attention(n_embd,n_head)
+        self.mlp=MLP(n_embd)
+        self.ln1=nn.RMSNorm(n_embd)
+        self.ln2=nn.RMSNorm(n_embd)
+    def forward(self,x):
+        x=x+self.att(self.ln1(x))
+        x=x+self.mlp(self.ln2(x))
+        return x
+    
+class Block1(nn.Module):#softmax attention
     def __init__(self,n_embd,n_head):
         super().__init__()
         self.att=MultiHeadAttention(n_embd,n_head)
@@ -308,13 +347,14 @@ class selfattnpooling(nn.Module):
 class Volatility_Prediction_Model(nn.Module):
     def __init__(self,n_embd,n_head,block_size,n_blocks):
         super().__init__()
-       
-       
+        self.block_size=block_size
+        #self.wpe=nn.Embedding(15,n_embd)
         self.res=Res34(49)
         self.dense=DenseNet1D(49)
         self.fusion = nn.Linear(2*512, n_embd)
         self.rnn = nn.GRU(n_embd, n_embd, batch_first=True)
-        self.blocks=nn.Sequential(*[Block(n_embd,n_head) for _ in range(n_blocks)])
+        self.blocks=nn.Sequential(*[Block(n_embd,n_head) for _ in range(n_blocks-1)])
+        self.b1=Block1(n_embd,n_head)
         self.ln=nn.RMSNorm(n_embd)
         self.l1=nn.Linear(n_embd,1)
         self.pool=selfattnpooling(n_embd)
@@ -331,7 +371,9 @@ class Volatility_Prediction_Model(nn.Module):
         short=self.dense(x)
         x=self.fusion(torch.cat([short,long],dim=-1))
         x, _ = self.rnn(x)
-        x=self.blocks(x)
+        #pos=self.wpe(torch.arange(0,15,dtype=torch.long, device=x.device))
+        #x=x+pos
+        x=self.b1(self.blocks(x))
         x=self.ln(x)
         
         x=self.pool(x)
